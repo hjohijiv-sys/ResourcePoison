@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace = "com.example.resourcepoison"
-    compileSdk = 34
+    compileSdk = 31
 
     defaultConfig {
         applicationId = "com.example.resourcepoison"
-        minSdk = 34
-        targetSdk = 34
+        minSdk = 26
+        targetSdk = 31
         versionCode = 1
         versionName = "1.0"
 
