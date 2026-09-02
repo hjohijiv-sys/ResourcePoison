@@ -46,13 +46,6 @@ public class MainActivity extends Activity {
         mStartButton = findViewById(R.id.start_button);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-
-        mStartButton.setText(granted ? R.string.start_button : R.string.request_permission);
-    }
-
     public void doStartStuff(View view) throws Exception {
         doStartStuff();
     }
